@@ -1,3 +1,4 @@
 /.vs
 /Resources/*
 /build/*
+*.json
