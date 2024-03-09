@@ -31,7 +31,8 @@ message(STATUS "OpenCV library path: ${OpenCV_LIB_DIR}")
 # 打印找到的所有OpenCV库
 message(STATUS "OpenCV libraries: ${OpenCV_LIBS}")
 
-find_package(CUDA REQUIRED)
+set(CMAKE_CUDA_COMPILER C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.1/bin/nvcc.exe)
+enable_language(CUDA)
 find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 find_package(Threads REQUIRED)
@@ -51,6 +52,7 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/YOLO/include
     E:/Tools/Yolov5/TensorRT-8.6.1.6/include
     C:/Program\ Files/NVIDIA\ GPU\ Computing\ Toolkit/CUDA/v12.1/include
+    ${PROJECT_SOURCE_DIR}/plugins/
 )
 link_directories(
     C:/Program\ Files/NVIDIA\ GPU\ Computing\ Toolkit/CUDA/v12.1/lib/x64
@@ -61,20 +63,24 @@ link_directories(
 # 编译 YOLO CUDA 库
 file(GLOB YOLO_SRC_DIR "${PROJECT_SOURCE_DIR}/YOLO/src/*.cpp" "${PROJECT_SOURCE_DIR}/YOLO/src/*.cu")
 message(STATUS "Compiling YOLO sources: ${YOLO_SRC_DIR}")
-cuda_add_library(yolov5_trt SHARED ${YOLO_SRC_DIR})
-target_link_libraries(yolov5_trt ${CUDA_LIBRARIES} nvinfer cudart ${OpenCV_LIBS})
-set_target_properties(yolov5_trt PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-)
+add_library(yolov5_trt SHARED ${YOLO_SRC_DIR})
+target_link_libraries(yolov5_trt nvinfer cudart ${OpenCV_LIBS})
+#set_target_properties(yolov5_trt PROPERTIES
+   # ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+  #  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+ #   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+#)
 message(STATUS "YOLO CUDA library compiled successfully")
 
 # 编译主程序
+file(GLOB_RECURSE PLUGIN_SRCS ${PROJECT_SOURCE_DIR}/plugins/*.cu)
+add_library(myplugins SHARED ${PLUGIN_SRCS})
+target_link_libraries(myplugins nvinfer cudart ${OpenCV_LIBS})
+set_target_properties(myplugins PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 aux_source_directory(${PROJECT_SOURCE_DIR}/src M_SRC_DIR)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 add_executable(ImageProcessor ${M_SRC_DIR})
-target_link_libraries(ImageProcessor Qt5::Core Qt5::Gui Qt5::Widgets ${CMAKE_THREAD_LIBS_INIT} yolov5_trt nvinfer cudart ${OpenCV_LIBS})
+target_link_libraries(ImageProcessor Qt5::Core Qt5::Gui Qt5::Widgets ${CMAKE_THREAD_LIBS_INIT} yolov5_trt myplugins nvinfer cudart ${OpenCV_LIBS})
 target_link_libraries(ImageProcessor Qt5::Widgets)
 
 # 设置 Qt 配置

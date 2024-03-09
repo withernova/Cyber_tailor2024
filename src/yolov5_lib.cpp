@@ -5,13 +5,11 @@
 #include <iostream>
 #include <chrono>
 #include "cuda_runtime_api.h"
-#include "yololayer.h"
 #include "postprocess.hpp"
 #include "yolov5_lib.h"
 #include "cuda_utils.h"
 #include "utils.h"
 #include "datatype.h"
-#include"preprocess.h"
 #include "NvInfer.h"
 using namespace nvinfer1;
 #define USE_FP16  // comment out this if want to use FP32
@@ -38,7 +36,7 @@ static void doInference(IExecutionContext& context, cudaStream_t& stream, void *
     //然后将源buffer拷入device的buffer
     //预处理
     // DMA input batch data to device, infer on the batch asynchronously, and DMA output back to host
-    CUDA_CHECK(cudaMemcpyAsync(buffers[0], input, batchSize * 3 * Yolo::INPUT_H * Yolo::INPUT_W * sizeof(float), cudaMemcpyHostToDevice, stream));
+    //CUDA_CHECK(cudaMemcpyAsync(buffers[0], input, batchSize * 3 * Yolo::INPUT_H * Yolo::INPUT_W * sizeof(float), cudaMemcpyHostToDevice, stream));
     //cudaMemcpyAsync(buffers[0], input, batchSize * 3 * Yolo::INPUT_H * Yolo::INPUT_W * sizeof(float), cudaMemcpyHostToDevice, stream);
     context.enqueue(batchSize, buffers, stream, nullptr);
     CUDA_CHECK(cudaMemcpyAsync(output, buffers[1], batchSize * OUTPUT_SIZE * sizeof(float), cudaMemcpyDeviceToHost, stream));
@@ -166,35 +164,36 @@ void * yolov5_trt_create(const char * engine_name)
 }
  
  //这个是检测部分 应该是重点
-int yolov5_trt_detect(void *h, cv::Mat &img, float threshold,std::vector<DetectBox>& det)
+int yolov5_trt_detect(void* h, cv::Mat& img, float threshold, std::vector<DetectBox>& det)
 {
     //还是新建一个指针 用于接受h 将其明确成Yolov5TRTContext类型 
-    Yolov5TRTContext *trt_ctx;
+    Yolov5TRTContext* trt_ctx;
     int i;
     int delay_preprocess;
     int delay_infer;
- 
-    trt_ctx = (Yolov5TRTContext *)h;
- 
- 
+
+    trt_ctx = (Yolov5TRTContext*)h;
+
+
     trt_ctx->result_json_str[0] = 0;
- 	// whether det is empty , if not, empty det
+    // whether det is empty , if not, empty det
     //确保返回的det数组为空 图像资源不为空
- 	if (!det.empty()) det.clear();
+    if (!det.empty()) det.clear();
     if (img.empty()) return 0;
     //这个是算延迟的可以不看
     auto start0 = std::chrono::system_clock::now();
- 
+
     //printf("yolov5_trt_detect start preprocess img \n");
-    cv::Mat pr_img = preprocess_img(img, Yolo::INPUT_W, Yolo::INPUT_H);
- 	//std::cout<<"after preprocess_img pr_img size:"<<pr_img.cols<<" "<<pr_img.rows<<std::endl;
- 	//std::cout<<"after preprocess_img frame size:"<<img.cols<<" "<<img.rows<<std::endl;
- 
- 
+    //cv::Mat pr_img = preprocess_img(img, Yolo::INPUT_W, Yolo::INPUT_H);
+    //std::cout<<"after preprocess_img pr_img size:"<<pr_img.cols<<" "<<pr_img.rows<<std::endl;
+    //std::cout<<"after preprocess_img frame size:"<<img.cols<<" "<<img.rows<<std::endl;
+
+
     //printf("yolov5_trt_detect start convert img to float\n");
     // letterbox BGR to RGB
+    /*
     i = 0;
-    //将图像的像素导入trt的data中
+    ////将图像的像素导入trt的data中
     for (int row = 0; row < Yolo::INPUT_H; ++row) {
         uchar* uc_pixel = pr_img.data + row * pr_img.step;
         for (int col = 0; col < Yolo::INPUT_W; ++col) {
@@ -206,23 +205,30 @@ int yolov5_trt_detect(void *h, cv::Mat &img, float threshold,std::vector<DetectB
         }
     }
     //依旧是时间
+    */
     auto end0 = std::chrono::system_clock::now();
- 
+
     delay_preprocess =  std::chrono::duration_cast<std::chrono::milliseconds>(end0 - start0).count();
- 
+
+    cuda_preprocess_init(kMaxInputImageSize);
+    //preprocess
+    cuda_preprocess(img.ptr(), img.cols, img.rows, (float*)trt_ctx->buffers[0], Yolo::INPUT_W, Yolo::INPUT_H, trt_ctx->cuda_stream);
+
+
+
     // Run inference
     //printf("yolov5_trt_detect start do inference\n");
     auto start = std::chrono::system_clock::now();
     //进行模型推理 将所有的数据送进去了
     doInference(*trt_ctx->exe_context, trt_ctx->cuda_stream, trt_ctx->buffers, trt_ctx->data, trt_ctx->prob, BATCH_SIZE);
- 
+
     auto end = std::chrono::system_clock::now();
     delay_infer = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
- 
-    std::cout <<"delay_proress:" << delay_preprocess << "ms, " << "delay_infer:" << delay_infer << "ms" << std::endl;
- 
+
+    std::cout << "delay_proress:" << delay_preprocess << "ms, " << "delay_infer:" << delay_infer << "ms" << std::endl;
+
     //printf("yolov5_trt_detect start do process infer result \n");
- 
+
     int fcount = 1;
     int str_len;
     std::vector<std::vector<Yolo::Detection>> batch_res(1);
@@ -238,15 +244,15 @@ int yolov5_trt_detect(void *h, cv::Mat &img, float threshold,std::vector<DetectB
 */
     nms(res, &trt_ctx->prob[0], threshold, NMS_THRESH);
 
- 
+
     i = 0;
     //对返回的数据流中的碰撞箱数据进行绑定 加入到det数组中 返回获取数据
-    for(i = 0 ; i < res.size(); i++){
+    for (i = 0; i < res.size(); i++) {
         int x1, y1, x2, y2;
         int class_id;
         float conf;
         cv::Rect r = get_rect(img, res[i].bbox);
-        DetectBox dd(r.x,r.y,r.x + r.width,r.y + r.height,(float)res[i].conf,(int)res[i].class_id);
+        DetectBox dd(r.x, r.y, r.x + r.width, r.y + r.height, (float)res[i].conf, (int)res[i].class_id);
         det.push_back(dd);
     }
     return 1;

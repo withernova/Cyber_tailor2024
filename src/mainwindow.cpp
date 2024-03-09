@@ -11,7 +11,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->browseBtn_i2i,SIGNAL(clicked()),this,SLOT(findImage()));
     connect(ui->submitBtn_t2i,SIGNAL(clicked()),this,SLOT(runPython()));
 
-    YOLOParser parser("E:/Project/CreateAndInnovation/QtScripts/ImageProcessor/build/yolov5s.engine","E:/Project/CreateAndInnovation/QtScripts/ImageProcessor/Resources/test3.mp4");
+    YOLOParser parser("E:/Tools/Yolov5/tensorrtx/yolov5/build/Debug/yolov5s.engine","E:/Project/CreateAndInnovation/QtScripts/ImageProcessor/Resources/test3.mp4");
     parser.TrtDetect();
 }
 

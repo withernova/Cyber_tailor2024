@@ -2,10 +2,12 @@
 
 //#include "types.h"
 #include "yololayer.h"
+#include "preprocess.h"
 #include <opencv2/opencv.hpp>
 
 #include "utils.h"
 using namespace Yolo;
+
 
 cv::Mat preprocess_img(cv::Mat& img, int input_w, int input_h) {
     int w, h, x, y;
