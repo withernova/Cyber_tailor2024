@@ -2,3 +2,4 @@
 /Resources/*
 /build/*
 *.json
+/bin/*
