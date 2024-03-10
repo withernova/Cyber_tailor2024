@@ -11,9 +11,8 @@ using namespace cv;
 
 
 //该类用来预处理图像
-class preprocessor
-{
-   // Q_OBJECT
+class preprocessor :public QObject{
+    Q_OBJECT
 public:
 
     preprocessor(QString s);

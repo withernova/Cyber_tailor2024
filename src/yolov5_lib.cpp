@@ -72,6 +72,7 @@ typedef struct
     cudaStream_t cuda_stream;
     int inputIndex;
     int outputIndex;
+
     char result_json_str[16384];
  
 }Yolov5TRTContext;

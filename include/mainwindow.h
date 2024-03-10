@@ -20,23 +20,21 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-class MainWindow : public QMainWindow
-{
-  //  Q_OBJECT
-
+class MainWindow : public QMainWindow {
+	Q_OBJECT
 public:
-    MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+	MainWindow(QWidget* parent = nullptr);
+	~MainWindow();
 
-    QImage preProcess(QString);
+	QImage preProcess(QString);
 
 private slots:
-    void findImage();
-    void runPython();
+	void findImage();
+	void runPython();
 
 
 private:
-    Ui::MainWindow *ui;
+	Ui::MainWindow* ui;
 
 
 };

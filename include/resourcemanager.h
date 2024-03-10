@@ -5,14 +5,11 @@
 #include <QDirIterator>
 #include<QDebug>
 
-class ResourceManager
-{
-   // Q_OBJECT
+class ResourceManager:public QObject{
+    Q_OBJECT
 public:
     ResourceManager();
     static void loadScripts();
-
-
 };
 
 #endif // RESOURCEMANAGER_H

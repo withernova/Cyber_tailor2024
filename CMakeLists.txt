@@ -5,6 +5,13 @@ set(CMAKE_CXX_STANDARD 11)  # 确保使用 C++11
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE Debug)
 
+# 设置 Qt 配置
+
+#set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_SOURCE_DIR}/ui)
+
 # 查找OpenCV库
 set(OpenCV_DIR "E:/Tools/OpenCV/opencv/build")
 find_package(OpenCV QUIET
@@ -33,9 +40,20 @@ message(STATUS "OpenCV libraries: ${OpenCV_LIBS}")
 
 set(CMAKE_CUDA_COMPILER C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.1/bin/nvcc.exe)
 enable_language(CUDA)
-find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
+
+set(Qt5_DIR "${CMAKE_PREFIX_PATH}/lib/cmake/Qt5")
+find_package(Qt5 COMPONENTS Core Quick LinguistTools REQUIRED)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets PrintSupport)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets PrintSupport)
 find_package(Threads REQUIRED)
+
+
+
+#set(CMAKE_INCLUDE_CURRENT_DIR ON)
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+
+
+
 
 # 移除不必要的添加定义
 add_definitions(-DAPI_EXPORTS)
@@ -72,20 +90,27 @@ target_link_libraries(yolov5_trt nvinfer cudart ${OpenCV_LIBS})
 #)
 message(STATUS "YOLO CUDA library compiled successfully")
 
+
 # 编译主程序
 file(GLOB_RECURSE PLUGIN_SRCS ${PROJECT_SOURCE_DIR}/plugins/*.cu)
 add_library(myplugins SHARED ${PLUGIN_SRCS})
 target_link_libraries(myplugins nvinfer cudart ${OpenCV_LIBS})
 set_target_properties(myplugins PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 aux_source_directory(${PROJECT_SOURCE_DIR}/src M_SRC_DIR)
+#aux_source_directory(${PROJECT_SOURCE_DIR}/include M_INC_DIR)
 include_directories(${PROJECT_SOURCE_DIR}/include)
-add_executable(ImageProcessor ${M_SRC_DIR})
+#add_executable(ImageProcessor ${M_SRC_DIR} ${M_INC_DIR})
+
+file(GLOB_RECURSE MOC_HEADERS ${PROJECT_SOURCE_DIR}/include/*.h)
+
+qt5_wrap_cpp(MOC_SOURCES ${MOC_HEADERS})
+add_executable(ImageProcessor ${M_SRC_DIR} ${MOC_SOURCES})
+
 target_link_libraries(ImageProcessor Qt5::Core Qt5::Gui Qt5::Widgets ${CMAKE_THREAD_LIBS_INIT} yolov5_trt myplugins nvinfer cudart ${OpenCV_LIBS})
 target_link_libraries(ImageProcessor Qt5::Widgets)
 
-# 设置 Qt 配置
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_SOURCE_DIR}/ui)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+if(WIN32)
+    # 整理自动生成的文件
+    source_group("MOC Files" REGULAR_EXPRESSION "moc_.*\\.cpp$")
+endif()
+
