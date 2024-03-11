@@ -20,11 +20,6 @@ MainWindow::~MainWindow(){
     delete ui;
 }
 
-QImage MainWindow::preProcess(QString src){
-    preprocessor* processor = new preprocessor(src);
-    return processor->main_process();
-}
-
 void MainWindow::findImage(){
     QString str = QFileDialog::getOpenFileName(this,"文件浏览","/","Image(*.png *.jpg;;All file(*.*)");
     ui->fileName_i2i->setText(str.toUtf8());

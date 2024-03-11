@@ -43,7 +43,7 @@ void YOLOParser::showDetection(cv::Mat& img, std::vector<DetectBox>& boxes){
         cv::Point br(box.x2, box.y2);
         cv::rectangle(temp, lt, br, cv::Scalar(255, 0, 0), 1);
         std::string lbl;
-
+        ROI.push_back(temp(Rect(lt, br)));
         if (((int)box.classID) == 0) lbl = cv::format("%s", "head");
         else  lbl = cv::format("%s", "helmet");
         cv::putText(temp, lbl, lt, cv::FONT_HERSHEY_COMPLEX, 0.5, cv::Scalar(0, 255, 0));

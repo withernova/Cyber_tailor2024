@@ -11,7 +11,6 @@
 #include<QErrorMessage>
 #include<QRect>
 #include<QGraphicsView>
-#include"preprocessor.h"
 #include "yoloparser.h"
 
 

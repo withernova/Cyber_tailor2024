@@ -37,7 +37,6 @@ public:
 private:
     int output_rows;
     int output_cols;
-
     //需要储存的变量：模型路径
     String engine_path;
     String media_path;
@@ -45,6 +44,9 @@ private:
     float conf_thresh = kNmsThresh;
     void* trt_engine = NULL;
     cv::VideoWriter outputVideo;
+    std::vector<Mat> ROI;
+
+    void _selectFrame(Mat&);
 
 };
 
