@@ -35,6 +35,9 @@ public:
     void TrtDetect();
     void showDetection(cv::Mat& img, std::vector<DetectBox>& boxes);
 private:
+    int output_rows;
+    int output_cols;
+
     //需要储存的变量：模型路径
     String engine_path;
     String media_path;

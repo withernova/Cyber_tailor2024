@@ -4,12 +4,19 @@
 
 YOLOParser::YOLOParser(String mpath,String mediapath):engine_path(mpath),media_path(mediapath){
     trt_engine = yolov5_trt_create(engine_path.c_str());
-    Mat tmp = imread(media_path);
+    cv::VideoCapture cap(media_path);  // 替换为您的视频文件路径
+    // 获取视频的宽度和高度
+    double width = cap.get(cv::CAP_PROP_FRAME_WIDTH);
+    double height = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
+    // 记得在结束时释放VideoCapture资源
+    cap.release();
+    output_cols = width;
+    output_rows= height;
 
     printf("create yolov5-trt , instance = %p\n", trt_engine);
     std::string videopath = "saved.avi";
     int codec = cv::VideoWriter::fourcc('M', 'J', 'P', 'G');
-    outputVideo.open(videopath,codec,25.0,cv::Size(1024, 576), true);
+    outputVideo.open(videopath,codec,25.0,cv::Size(output_cols, output_rows), true);
 }
 void YOLOParser::TrtDetect(){
     VideoCapture capture;
@@ -42,7 +49,7 @@ void YOLOParser::showDetection(cv::Mat& img, std::vector<DetectBox>& boxes){
         cv::putText(temp, lbl, lt, cv::FONT_HERSHEY_COMPLEX, 0.5, cv::Scalar(0, 255, 0));
     }
     //cv::imshow("img", temp);
-    cv::resize(temp, temp, cv::Size(1024, 576), 0, 0);
+    cv::resize(temp, temp, cv::Size(output_cols, output_rows), 0, 0);
     outputVideo.write(temp);
     cv::waitKey(1);
 }
