@@ -6,7 +6,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow){
     //qRegisterMetaType<MainWindow>("mainwindow");
 
-    YOLOParser parser("E:/Tools/Yolov5/tensorrtx/yolov5/build/Debug/yolov5s.engine", "E:/Project/CreateAndInnovation/QtScripts/ImageProcessor/Resources/test3.mp4");
+    YOLOParser parser("E:/Tools/Yolov5/tensorrtx/yolov5/build/Debug/yolov5s.engine", "E:/Project/CreateAndInnovation/QtScripts/Cyber_tailor2024/Resources/e6ae67469df4936e2a1540e885b8d8b8.mp4");
     parser.TrtDetect();
 
     ui->setupUi(this);

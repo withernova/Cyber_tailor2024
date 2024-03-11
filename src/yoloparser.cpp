@@ -2,12 +2,14 @@
 
 
 
-YOLOParser::YOLOParser(String mpath,String mediapath):model_path(mpath),media_path(mediapath){
-    trt_engine = yolov5_trt_create(model_path.c_str());
+YOLOParser::YOLOParser(String mpath,String mediapath):engine_path(mpath),media_path(mediapath){
+    trt_engine = yolov5_trt_create(engine_path.c_str());
+    Mat tmp = imread(media_path);
+
     printf("create yolov5-trt , instance = %p\n", trt_engine);
     std::string videopath = "saved.avi";
     int codec = cv::VideoWriter::fourcc('M', 'J', 'P', 'G');
-    outputVideo.open(videopath,codec,25.0,cv::Size(1024, 576),true);
+    outputVideo.open(videopath,codec,25.0,cv::Size(1024, 576), true);
 }
 void YOLOParser::TrtDetect(){
     VideoCapture capture;
@@ -15,8 +17,14 @@ void YOLOParser::TrtDetect(){
     cv::Mat frame;
     while(capture.read(frame)){
         auto ret = yolov5_trt_detect(trt_engine, frame, conf_thresh,det);
-        if(ret!= NULL){
+        if(ret!= 0){
+            //代表识别到了物体
             showDetection(frame,det);
+        }
+        else {
+            //没有识别到 可以直接跳过
+            std::cout << "---------------failed______________________"<<std::endl;
+            continue;
         }
     }
 }

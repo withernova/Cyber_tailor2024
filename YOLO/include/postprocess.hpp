@@ -77,7 +77,7 @@ static bool cmp(const Detection& a, const Detection& b) {
     return a.conf > b.conf;
 }
 
-void nms(std::vector<Yolo::Detection>& res, float* output, float conf_thresh, float nms_thresh) {
+bool nms(std::vector<Yolo::Detection>& res, float* output, float conf_thresh, float nms_thresh) {
     int det_size = sizeof(Yolo::Detection) / sizeof(float);
     std::map<float, std::vector<Yolo::Detection>> m;
     for (int i = 0; i < output[0] && i < Yolo::MAX_OUTPUT_BBOX_COUNT; i++) {
@@ -86,6 +86,9 @@ void nms(std::vector<Yolo::Detection>& res, float* output, float conf_thresh, fl
         memcpy(&det, &output[1 + det_size * i], det_size * sizeof(float));
         if (m.count(det.class_id) == 0) m.emplace(det.class_id, std::vector<Yolo::Detection>());
         m[det.class_id].push_back(det);
+    }
+    if (m.size() <= 0) {
+        return false;
     }
     for (auto it = m.begin(); it != m.end(); it++) {
         auto& dets = it->second;
@@ -101,6 +104,7 @@ void nms(std::vector<Yolo::Detection>& res, float* output, float conf_thresh, fl
             }
         }
     }
+    return true;
 }
 
 void batch_nms(std::vector<std::vector<Yolo::Detection>>& res_batch, float* output, int batch_size, int output_size, float conf_thresh, float nms_thresh) {

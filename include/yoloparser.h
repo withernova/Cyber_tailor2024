@@ -16,6 +16,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include "yolov5_lib.h"
 #include <QObject>
+#include"config.h"
 using namespace cv;
 //目标：
 //通过parser来实时检测摄像头（视频源）如果出现了食物后 则开始进行录制并进行ROI检测（清晰度）如果达到阈值后则提取出来
@@ -35,10 +36,10 @@ public:
     void showDetection(cv::Mat& img, std::vector<DetectBox>& boxes);
 private:
     //需要储存的变量：模型路径
-    String model_path;
+    String engine_path;
     String media_path;
     std::vector<DetectBox> det;
-    float conf_thresh = 0.3;
+    float conf_thresh = kNmsThresh;
     void* trt_engine = NULL;
     cv::VideoWriter outputVideo;
 
