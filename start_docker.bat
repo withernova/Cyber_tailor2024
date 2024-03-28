@@ -1,0 +1,1 @@
+docker run -p 5000:22 -i -t cybertailor/builder/2 /bin/bash

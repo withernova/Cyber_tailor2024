@@ -1,0 +1,52 @@
+# 选择合适的CUDA和Ubuntu版本
+FROM cybertailor/base
+
+# 安装你的应用所需的其他必要软件和库
+RUN apt-get update && apt-get install -y \
+    libeigen3-dev \
+    libgtk2.0-dev \
+    libavcodec-dev \
+    libavformat-dev \
+    libjpeg-dev \
+    libswscale-dev \
+    libtiff5-dev \
+    libopencv-dev \
+    cmake \
+    g++ \
+    rsync \
+    zip \
+    ninja-build \
+    openssh-server \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV LD_LIBRARY_PATH=/usr/lib:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+ENV PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:$PKG_CONFIG_PATH
+ENV CPLUS_INCLUDE_PATH=/usr/include/opencv4:$CPLUS_INCLUDE_PATH
+
+
+COPY nv-tensorrt-local-repo-ubuntu2004-8.6.1-cuda-12.0_1.0-1_amd64.deb /home/tmp/
+
+RUN dpkg -i /home/tmp/nv-tensorrt-local-repo-ubuntu2004-8.6.1-cuda-12.0_1.0-1_amd64.deb
+
+RUN cp /var/nv-tensorrt-local-repo-ubuntu2004-8.6.1-cuda-12.0/*-keyring.gpg /usr/share/keyrings/
+
+RUN apt-get update
+# 安装 TensorRT 和必要依赖
+RUN apt-get install -y --no-install-recommends \
+    tensorrt 
+
+RUN useradd -m -d /home/saul -s /bin/bash -G sudo saul
+RUN echo 'saul:700101' | chpasswd
+
+#RUN find /usr /local -type d -name "opencv4"
+# 复制你的应用到容器内
+#COPY . /app
+
+# 设置工作目录
+#WORKDIR /app
+#RUN ls /app
+# 安装和构建你的应用
+#RUN cmake ./Cyber_tailor2024 && make
+EXPOSE 22
+# 定义容器启动时执行的命令
+CMD ["bash"]

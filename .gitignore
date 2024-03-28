@@ -3,3 +3,5 @@
 /build/*
 *.json
 /bin/*
+/out/
+

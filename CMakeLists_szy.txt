@@ -13,6 +13,7 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_SOURCE_DIR}/ui)
 
 # 查找OpenCV库
+set(OpenCV_DIR "E:/Tools/OpenCV/opencv/build")
 find_package(OpenCV QUIET
     NO_MODULE
     NO_DEFAULT_PATH
@@ -32,18 +33,17 @@ message(STATUS "OpenCV version: ${OpenCV_VERSION}")
 message(STATUS "OpenCV include path: ${OpenCV_INCLUDE_DIRS}")
 
 # 打印链接库目录
-
 message(STATUS "OpenCV library path: ${OpenCV_LIB_DIR}")
 
 # 打印找到的所有OpenCV库
 message(STATUS "OpenCV libraries: ${OpenCV_LIBS}")
 
-set(CMAKE_CUDA_COMPILER /usr/local/cuda-12.1/bin/nvcc)
+set(CMAKE_CUDA_COMPILER C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.1/bin/nvcc.exe)
 enable_language(CUDA)
 
 set(Qt5_DIR "${CMAKE_PREFIX_PATH}/lib/cmake/Qt5")
 find_package(Qt5 COMPONENTS Core Quick LinguistTools REQUIRED)
-find_package(QT NAMES Qt5 Qt5 REQUIRED COMPONENTS Widgets PrintSupport)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets PrintSupport)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets PrintSupport)
 find_package(Threads REQUIRED)
 
@@ -61,21 +61,21 @@ add_definitions(-DAPI_EXPORTS)
 # 设置 CUDA NVCC 目标架构
 set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};-g;-G;-gencode arch=compute_61,code=sm_61")
 
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
-
 # 修正 include 和 link 目录
 include_directories(
+    E:/Tools/Eigen-/eigen
     ${CUDA_INCLUDE_DIRS}
     ${OpenCV_INCLUDE_DIRS}
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/YOLO/include
-    /usr/local/cuda-12.1/include
-    ${PROJECT_SOURCE_DIR}/plugins
-    /usr/include/opencv4
+    E:/Tools/Yolov5/TensorRT-8.6.1.6/include
+    C:/Program\ Files/NVIDIA\ GPU\ Computing\ Toolkit/CUDA/v12.1/include
+    ${PROJECT_SOURCE_DIR}/plugins/
 )
 link_directories(
-    /usr/local/cuda-12.1/lib/
-    ${PROJECT_SOURCE_DIR}/lib
+    C:/Program\ Files/NVIDIA\ GPU\ Computing\ Toolkit/CUDA/v12.1/lib/x64
+    E:/Tools/Yolov5/TensorRT-8.6.1.6/lib
+    E:/Tools/OpenCV/opencv/build/x64/vc16/lib
 )
 
 # 编译 YOLO CUDA 库
@@ -106,10 +106,11 @@ file(GLOB_RECURSE MOC_HEADERS ${PROJECT_SOURCE_DIR}/include/*.h)
 qt5_wrap_cpp(MOC_SOURCES ${MOC_HEADERS})
 add_executable(ImageProcessor ${M_SRC_DIR} ${MOC_SOURCES})
 
-target_link_libraries(ImageProcessor Eigen3::Eigen)
 target_link_libraries(ImageProcessor Qt5::Core Qt5::Gui Qt5::Widgets ${CMAKE_THREAD_LIBS_INIT} yolov5_trt myplugins nvinfer cudart ${OpenCV_LIBS})
+target_link_libraries(ImageProcessor Qt5::Widgets)
 
 if(WIN32)
     # 整理自动生成的文件
     source_group("MOC Files" REGULAR_EXPRESSION "moc_.*\\.cpp$")
 endif()
+

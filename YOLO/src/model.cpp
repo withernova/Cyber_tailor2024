@@ -347,7 +347,8 @@ ICudaEngine* build_det_engine(unsigned int maxBatchSize, IBuilder* builder, IBui
 
   // Engine config
   builder->setMaxBatchSize(maxBatchSize);
-  config->setMaxWorkspaceSize(16 * (1 << 20));  // 16MB
+  config->
+      MaxWorkspaceSize(16 * (1 << 20));  // 16MB
 #if defined(USE_FP16)
   config->setFlag(BuilderFlag::kFP16);
 #elif defined(USE_INT8)
